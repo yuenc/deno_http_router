@@ -41,3 +41,11 @@ export function routesBind(routes: Route[]) {
     addDeleteRoute: pushRequestRoute.bind(null, Method.Delete),
   };
 }
+
+export function createRoutes() {
+  const routes: Route[] = [];
+  return {
+    routes,
+    ...routesBind(routes),
+  };
+}
