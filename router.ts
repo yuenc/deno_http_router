@@ -3,6 +3,7 @@ import { ServerRequest, Response } from "./deps.ts";
 import { Handler, errorHandlers, Params } from "./handler.ts";
 import { loggerError } from "./logger.ts";
 import { str_to_method, Method } from "./method.ts";
+import { Middleware } from "./middleware.ts";
 //
 
 async function match_route(
@@ -30,13 +31,20 @@ async function match_route(
   return null;
 }
 
-interface MiddlewareHandler {
-  (request: ServerRequest): ReturnType<Handler>;
+async function tryRespond(request: ServerRequest, response: Response) {
+  try {
+    await request.respond(response);
+  } catch (e) {
+    loggerError(e);
+  }
 }
 
 export class Router {
-  private mwHandlers: MiddlewareHandler[] = [];
+  middleware: Middleware = new Middleware();
   [k: number]: Route[] | undefined
+  constructor() {
+    this.middleware = new Middleware();
+  }
   mount(this: this, base: string, routes: Route[]): this {
     for (const route of routes) {
       route.set_uri(base, route.uri);
@@ -45,22 +53,19 @@ export class Router {
     return this;
   }
 
-  middleware(this: this, handler: MiddlewareHandler): this {
-    this.mwHandlers.push(handler);
-    return this;
-  }
-
   handler = this.asyncHandler.bind(this);
+  addMiddleware = this.middleware.add.bind(this.middleware);
 
   private async asyncHandler(request: ServerRequest): Promise<void> {
-    const mwResponseOrVoid = await this.mwHandlersLoop(request);
-    if (mwResponseOrVoid !== undefined) {
-      try {
-        request.respond(mwResponseOrVoid);
-      } catch (e) {
-        loggerError(e);
+    this.middleware.currentRequest = request;
+    for await (const result of this.middleware) {
+      if (result !== null) {
+        if (result !== undefined) {
+          tryRespond(request, result);
+          return;
+        }
+        break;
       }
-      return;
     }
     const routeResponseOrVoid = await this.routesLoop(request);
     if (routeResponseOrVoid !== undefined) {
@@ -105,18 +110,6 @@ export class Router {
       }
     }
     errorHandlers.notFound(request);
-  }
-
-  private async mwHandlersLoop(
-    request: ServerRequest,
-  ): Promise<Response | void> {
-    for (const mwHandler of this.mwHandlers) {
-      const responseOrVoid = await mwHandler(request);
-      if (responseOrVoid !== null) {
-        return responseOrVoid;
-      }
-    }
-    return;
   }
 
   private routes(index: number): Route[] {

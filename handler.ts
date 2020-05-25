@@ -26,6 +26,7 @@ interface HandlerNull {
 }
 
 export type Handler = HandlerResponse | HandlerVoid | HandlerNull;
+export type HandlerResult = Response | void | null;
 
 export const errorHandlers = {
   async notFound(request: ServerRequest) {
