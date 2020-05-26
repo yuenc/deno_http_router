@@ -5,13 +5,17 @@ interface MiddlewareHandler {
   (request: ServerRequest): ReturnType<Handler>;
 }
 
+interface MiddlewareMedia {
+  request: ServerRequest;
+}
+
 export class Middleware {
   private len: number;
-  currentRequest: ServerRequest | null;
+  media: MiddlewareMedia | null;
   [k: number]: MiddlewareHandler | undefined
   constructor() {
     this.len = 0;
-    this.currentRequest = null;
+    this.media = null;
   }
 
   add(this: this, handler: MiddlewareHandler): void {
@@ -31,7 +35,7 @@ export class Middleware {
   }
 
   private async *iterateMiddleWare(
-    request: ServerRequest,
+    { request }: MiddlewareMedia,
   ): AsyncIterableIterator<HandlerResult> {
     let index = this.len;
     let handler: MiddlewareHandler | undefined;
@@ -41,13 +45,15 @@ export class Middleware {
         yield await handler(request);
       }
     }
-    return;
   }
 
   [Symbol.asyncIterator](
-    request = this.currentRequest,
+    media = this.media,
   ): AsyncIterableIterator<HandlerResult> {
-    this.currentRequest = null;
-    return this.iterateMiddleWare(request!);
+    this.media = null;
+    if (media === null) {
+      throw new TypeError("current request is null");
+    }
+    return this.iterateMiddleWare(media);
   }
 }
