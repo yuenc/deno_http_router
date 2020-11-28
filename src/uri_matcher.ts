@@ -99,17 +99,20 @@ function addURINode(
   return addURINode(segmentList, node);
 }
 
-export default class URIMatcher<T> {
-  uri: string | null = null;
-  level: number = 0;
-  index: number = 1;
-  parent: URINode<T> | null = null;
-  named: string = "";
-  regexp: RegExp | null = null;
-  segment: string = "";
-  matcher: RegExp | null = null;
-  handler: T | null = null;
-  children: URINode<T>[] = [];
+interface URIMatcherImpl<T> extends URINode<T> {
+}
+
+export default class URIMatcher<T> implements URIMatcherImpl<T> {
+  uri = null;
+  level = 0;
+  index = 1;
+  parent = null;
+  named = "";
+  regexp = null;
+  segment = "";
+  matcher = null;
+  handler = null;
+  children = [];
 
   add(uri: string, handler: T) {
     const segmentList = uri.split("/");
