@@ -1,41 +1,41 @@
 //
 
-interface Tree<T> {
+interface URINode<T> {
   uri: string | null;
   level: number;
   index: number;
-  parent: Tree<T> | null;
+  parent: URINode<T> | null;
   current: string | null;
   matcher: RegExp | null;
   handler: T | null;
-  children: Tree<T>[];
+  children: URINode<T>[];
 }
 
-function findParentTree<T>(
+function findURIParentNode<T>(
   uriList: string[],
-  trees: Tree<T>[],
+  nodeList: URINode<T>[],
   index: number,
-): Tree<T> | null {
+): URINode<T> | null {
   const current = uriList[index];
   if (current === undefined) {
     return null;
   }
   const areEnd = uriList.length === (index + 2);
-  for (const tree of trees) {
-    if (tree.current === current) {
+  for (const node of nodeList) {
+    if (node.current === current) {
       return areEnd
-        ? tree
-        : findParentTree(uriList, tree.children, index + 1);
+        ? node
+        : findURIParentNode(uriList, node.children, index + 1);
     }
   }
   return null;
 }
 
-function findTree<T>(
+function findURINode<T>(
   uriList: string[],
-  trees: Tree<T>[],
+  nodeList: URINode<T>[],
   index: number,
-): Tree<T> | null {
+): URINode<T> | null {
   const current = uriList[index];
   if (current === undefined) {
     return null;
@@ -43,43 +43,43 @@ function findTree<T>(
   const nextIndex = index + 1;
   const isLast = uriList.length === nextIndex;
 
-  for (const tree of trees) {
-    // console.log(current, isLast, tree.current === current, tree);
+  for (const node of nodeList) {
+    // console.log(current, isLast, node.current === current, node);
     if (
-      (tree.matcher === null && tree.current === current) ||
-      (tree.matcher !== null && tree.matcher.test(current))
+      (node.matcher === null && node.current === current) ||
+      (node.matcher !== null && node.matcher.test(current))
     ) {
-      return isLast ? tree : findTree(uriList, tree.children, nextIndex);
+      return isLast ? node : findURINode(uriList, node.children, nextIndex);
     }
   }
   return null;
 }
 
-function addTree<T>(
+function addURINode<T>(
   uriList: string[],
-  parentTree: Tree<T>,
+  parentNode: URINode<T>,
   index: number,
-): Tree<T> | null {
+): URINode<T> | null {
   const current = uriList[index];
   if (current === undefined) {
     return null;
   }
   const nextIndex = index + 1;
-  const tree: Tree<T> = {
+  const node: URINode<T> = {
     uri: null,
     level: 0,
     index: nextIndex,
-    parent: parentTree,
+    parent: parentNode,
     current: current,
     matcher: partMatcher(current),
     handler: null,
     children: [],
   };
-  parentTree.children.push(tree);
+  parentNode.children.push(node);
   if (uriList.length === nextIndex) {
-    return tree;
+    return node;
   }
-  return addTree(uriList, tree, nextIndex);
+  return addURINode(uriList, node, nextIndex);
 }
 
 function partMatcher(part: string): RegExp | null {
@@ -93,34 +93,42 @@ export default class UriMatcher<T> {
   uri: string | null = null;
   level: number = 0;
   index: number = 0;
-  parent: Tree<T> | null = null;
+  parent: URINode<T> | null = null;
   current: string | null = null;
   matcher: RegExp | null = null;
   handler: T | null = null;
-  children: Tree<T>[] = [];
+  children: URINode<T>[] = [];
 
   add(uri: string, handler: T) {
     const uriList = uri.split("/");
-    const currentTree = findParentTree(
+    let currentNode = findURIParentNode(
       uriList,
       this.children,
       0,
-    ) ?? this;
-    const lastTree = addTree(
+    );
+    if (currentNode === null) {
+      currentNode = this;
+    }
+    let lastNode = addURINode(
       uriList,
-      currentTree,
-      currentTree.index,
-    ) ?? currentTree;
-    lastTree.uri = uri;
-    lastTree.handler = handler;
+      currentNode,
+      currentNode.index,
+    );
+    if (lastNode === null) {
+      lastNode = currentNode;
+    }
+    lastNode.uri = uri;
+    lastNode.handler = handler;
 
-    console.log(JSON.stringify(this, ["uri", "current", "matcher", "children"], 2))
+    console.log(
+      JSON.stringify(this, ["uri", "current", "matcher", "children"], 2),
+    );
   }
 
   remove(uri: string) {
   }
 
-  find(uri: string): Tree<T> | null {
-    return findTree(uri.split("/"), this.children, 0);
+  find(uri: string): URINode<T> | null {
+    return findURINode(uri.split("/"), this.children, 0);
   }
 }
