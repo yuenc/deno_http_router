@@ -1,7 +1,7 @@
-import { Method } from "./method.ts";
-import { Handler } from "./handler.ts";
-import { Route } from "./route.ts";
-import { Router } from "./router.ts";
+import { Method } from "./src/method.ts";
+import { Handler } from "./src/handler.ts";
+import { Route } from "./src/route.ts";
+import { Router } from "./src/router.ts";
 
 export {
   Route,

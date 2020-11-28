@@ -30,7 +30,12 @@ export class Router {
     return this;
   }
 
-  handler = this.asyncHandler.bind(this);
+  handler = (request: ServerRequest) => {
+    this.asyncHandler(request).catch(e => {
+      request.respond(e);
+    });
+  }
+
   addMiddleware = this.middleware.add.bind(this.middleware);
 
   private async asyncHandler(request: ServerRequest): Promise<void> {
