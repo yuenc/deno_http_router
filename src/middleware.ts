@@ -1,9 +1,7 @@
-import { ServerRequest } from "./deps.ts";
-import { Handler, HandlerResult } from "./handler.ts";
+import { Response, ServerRequest } from "./deps.ts";
 
-interface MiddlewareHandler {
-  (request: ServerRequest): ReturnType<Handler>;
-}
+type MHSyncResult = Response | null | undefined;
+type MiddlewareHandler = (request: ServerRequest) => Promise<MHSyncResult>;
 
 interface MiddlewareMedia {
   request: ServerRequest;
@@ -36,7 +34,7 @@ export class Middleware {
 
   private async *iterateMiddleWare(
     { request }: MiddlewareMedia,
-  ): AsyncIterableIterator<HandlerResult> {
+  ): AsyncIterableIterator<MHSyncResult> {
     let index = this.len;
     let handler: MiddlewareHandler | undefined;
     while (index-- > 0) {
@@ -49,7 +47,7 @@ export class Middleware {
 
   [Symbol.asyncIterator](
     media = this.media,
-  ): AsyncIterableIterator<HandlerResult> {
+  ): AsyncIterableIterator<MHSyncResult> {
     this.media = null;
     if (media === null) {
       throw new TypeError("current request is null");

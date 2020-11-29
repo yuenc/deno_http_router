@@ -9,7 +9,7 @@ const options: Deno.ListenOptions = {
 server.listenAndServe(
   options,
   createRouter()
-    .mount("", userRoutes())
+    .mount(userRoutes())
     .handler,
 );
 

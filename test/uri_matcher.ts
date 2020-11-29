@@ -1,8 +1,8 @@
 import { assert } from "./deps.ts";
-import URIMatcher from "../src/uri_matcher.ts";
+import { URIMatcher } from "../src/uri_matcher.ts";
 
 Deno.test("src/uri_matcher.ts test", () => {
-  const mathcer = new URIMatcher<string>();
+  const mathcer = new URIMatcher();
 
   const urlList: string[] = [
     "/",
@@ -12,11 +12,11 @@ Deno.test("src/uri_matcher.ts test", () => {
   ];
 
   for (const url of urlList) {
-    mathcer.add(url, url);
+    mathcer.add(url);
     assert(mathcer.find(url)?.uri === url);
   }
 
-  mathcer.add("/foo/bar/:name", "/foo/bar/:name");
+  mathcer.add("/foo/bar/:name");
   assert(mathcer.find("/foo/bar/cc")?.uri === "/foo/bar/:name");
 });
 

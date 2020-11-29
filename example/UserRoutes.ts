@@ -1,15 +1,16 @@
-import { Route, createRoutes } from "./deps.ts";
+import { createRoutes, Routes } from "./deps.ts";
 // path /user
-export function userRoutes(): Route[] {
+export function userRoutes(): Routes {
   return routes;
 }
 
 const {
   routes,
-  addGetRoute,
+  add,
+  addGet,
 } = createRoutes();
 
-addGetRoute("user/:username/", (req, param) => {
+addGet("user/:username/", (req, param) => {
   console.log("param :", param);
   req.respond({ body: "username is " + param.username });
 });

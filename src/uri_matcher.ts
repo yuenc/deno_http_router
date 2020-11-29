@@ -1,16 +1,22 @@
 //
 
-interface URINode<T = any> {
+export interface URIParams {
+  [K: string]: string | undefined;
+}
+
+interface URINode {
   uri: string | null;
   level: number;
   index: number;
-  parent: URINode<T> | null;
+  parent: URINode | null;
   named: string;
   regexp: RegExp | null;
   segment: string;
-  handler: T | null;
-  children: URINode<T>[];
+  children: URINode[];
+  params: URIParams;
 }
+
+const EMPTY_OBJ = {};
 
 function findURIParentNode(
   segmentList: string[],
@@ -33,7 +39,7 @@ function findURIParentNode(
 }
 
 let findURINodeSegmentList: string[];
-let findURINodeMatchParams: Record<string, string | undefined | null> = {};
+let findURINodeMatchParams: URIParams = {};
 function findURINode(
   nodeList: URINode[],
   index: number,
@@ -83,8 +89,8 @@ function addURINode(
     named: "",
     regexp: null,
     segment: segment,
-    handler: null,
     children: [],
+    params: EMPTY_OBJ,
   };
 
   if (segment[0] === ":") {
@@ -99,26 +105,24 @@ function addURINode(
   return addURINode(segmentList, node);
 }
 
-interface URIMatcherImpl<T> extends URINode<T> {
-}
+export class URIMatcher {
+  private root: URINode = {
+    uri: null,
+    level: 0,
+    index: 1,
+    parent: null,
+    named: "",
+    regexp: null,
+    segment: "",
+    children: [],
+    params: EMPTY_OBJ,
+  };
 
-export default class URIMatcher<T> implements URIMatcherImpl<T> {
-  uri = null;
-  level = 0;
-  index = 1;
-  parent = null;
-  named = "";
-  regexp = null;
-  segment = "";
-  matcher = null;
-  handler = null;
-  children = [];
-
-  add(uri: string, handler: T) {
+  add(uri: string) {
     const segmentList = uri.split("/");
-    let currentNode = findURIParentNode(segmentList, [this], 0);
+    let currentNode = findURIParentNode(segmentList, [this.root], 0);
     if (currentNode === null) {
-      currentNode = this;
+      currentNode = this.root;
     }
     let lastNode = addURINode(
       segmentList,
@@ -128,7 +132,6 @@ export default class URIMatcher<T> implements URIMatcherImpl<T> {
       lastNode = currentNode;
     }
     lastNode.uri = uri;
-    lastNode.handler = handler;
 
     // console.log(
     //   JSON.stringify(
@@ -142,21 +145,16 @@ export default class URIMatcher<T> implements URIMatcherImpl<T> {
   // remove(uri: string) {
   // }
 
-  find(uri: string): URINode<T> | null {
-    findURINodeSegmentList = uri.split("/");
+  find(urlPath: string): Readonly<URINode> | null {
+    findURINodeSegmentList = urlPath.split("/");
     findURINodeMatchParams = {};
-    const node = findURINode([this], 0);
+    const node = findURINode([this.root], 0);
     if (node === null) {
       return null;
     }
-
-    // while (node.parent !== null) {
-    // }
-
-    console.log(uri, findURINodeMatchParams);
     return {
       ...node,
-      parent: null,
+      params: findURINodeMatchParams,
     };
   }
 }
