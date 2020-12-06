@@ -58,6 +58,7 @@ function findURINode(
       areFound = node.segment === segment;
     } else {
       const matched = segment.match(node.regexp);
+      console.log(matched)
       if (matched) {
         areFound = true;
         findURINodeMatchParams[node.named] = matched[0];
@@ -132,14 +133,14 @@ export class URIMatcher {
       lastNode = currentNode;
     }
     lastNode.uri = uri;
-
-    // console.log(
-    //   JSON.stringify(
-    //     this,
-    //     ["uri", "index", "segment", "matcher", "children"],
-    //     2,
-    //   ),
-    // );
+    console.log(uri);
+    console.log(
+      JSON.stringify(
+        this.root,
+        ["uri", "index", "segment", "regexp", "matcher", "children"],
+        2,
+      ),
+    );
   }
 
   // remove(uri: string) {

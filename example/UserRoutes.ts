@@ -10,7 +10,7 @@ const {
   addGet,
 } = createRoutes();
 
-addGet("user/:username/", (req, param) => {
+addGet("/user/:username/", (req, param) => {
   console.log("param :", param);
   req.respond({ body: "username is " + param.username });
 });

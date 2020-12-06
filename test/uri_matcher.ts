@@ -9,6 +9,11 @@ Deno.test("src/uri_matcher.ts test", () => {
     "/foo",
     "/foo/bar",
     "/foo/bar/",
+
+    "/#GET",
+    "/foo#GET",
+    "/foo/bar#GET",
+    "/foo/bar/#GET",
   ];
 
   for (const url of urlList) {
