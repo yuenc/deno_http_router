@@ -34,13 +34,11 @@ export class URIRouter {
   matcher: URIMatcher = new URIMatcher();
   middlewares: Set<MiddlewareHandler> = new Set();
   mount(this: this, routes: Routes): this {
-    console.log(routes);
     for (const [key, value] of routes) {
       if (this.routes.has(key)) {
         throw `route uri '${key}' has already been declared`;
       } else {
         this.routes.set(key, value);
-        console.log(key);
         this.matcher.add(key);
       }
     }
@@ -80,11 +78,13 @@ export class URIRouter {
   private async handleRoutes(request: ServerRequest): Promise<unknown> {
     const urlPath = request.url.split("?")[0] + "#" +
       request.method.toUpperCase();
-    console.log(urlPath);
+    console.log("urlPath", urlPath);
     const uriNode = this.matcher.find(urlPath);
-    if (uriNode !== null) {
-      const handler = this.routes.get(uriNode.uri!)!;
-      return handler(request, uriNode.params!);
+    if (uriNode && uriNode.uri) {
+      const handler = this.routes.get(uriNode.uri);
+      if (handler !== undefined) {
+        return handler(request, uriNode.params);
+      }
     }
     // not found
     HTTP_NOT_FOUND(request);
